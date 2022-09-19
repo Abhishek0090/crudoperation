@@ -1,4 +1,4 @@
-
+<?php include 'insert.php'?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,6 +20,7 @@
                     <th scope="col">Email</th>
                     <th scope="col">Contact</th>
                     <th scope="col">Edit</th>
+                    <th scope="col">Files</th>
                     
                 </tr>
             </thead>
@@ -28,8 +29,9 @@
 
             $query = "SELECT * FROM crudtable";
             $result = mysqli_query($conn,$query);
+   
             // print_r($result);die;
-            while($res = mysqli_fetch_array($result)){
+            while($res = mysqli_fetch_array($result,MYSQLI_ASSOC)){
                 // print_r($res);die;
 
                 
@@ -42,16 +44,14 @@
         <td><?php echo $res['Contact']; ?></td>
         <td><a href="update.php?id=<?php echo $res['Id']; ?>"><input type="button" class="btn btn-success" value="Update"></a>
        <a href="delete.php?id=<?php echo $res['Id'];?>"><input type="button" class="btn btn-danger" value="Delete"></a></td>
-        
-
+        <td><a href="view.php?file_id=<?php echo $res['Id'];?>"><?php echo $res['files'];?></a></td>
+    
     </tr>
 </tbody>
 
 <?php } ?>
 </table>
                     </form>
-                    <button class="btn btn-primary bg-dark text-center">
-                        <a href="insert.php" class="text-white">Add new</a>
-                    </button>
+
                     </body>
                     </html>

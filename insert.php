@@ -1,11 +1,41 @@
     <?php
             include 'conn.php';
             
-            if(count($_POST)!=0){
+            if(count($_POST)!=0 && isset($_POST['save'])){
                 extract($_POST); //used for extracting values
                 // print_r($_POST);die; 
-                $query = "INSERT INTO crudtable(name,email,contact) VALUES ('$name','$email','$contact')";
-                $result = mysqli_query($conn,$query);
+                
+           // name of the uploaded file
+    $filename = $_FILES['myfile']['name'];
+
+    // destination of the file on the server
+    $destination = 'uploads/' . $filename;
+
+    // get the file extension
+    $extension = pathinfo($filename, PATHINFO_EXTENSION);
+
+    // the physical file on a temporary uploads directory on the server
+    $file = $_FILES['myfile']['tmp_name'];
+    $size = $_FILES['myfile']['size'];
+
+    if (!in_array($extension, ['zip', 'pdf', 'docx','png'])) {
+        echo "You file extension must be .zip, .pdf or .docx .png";
+    } elseif ($_FILES['myfile']['size'] > 1000000) { // file shouldn't be larger than 1Megabyte
+        echo "File too large!";
+    } else {
+        // move the uploaded (temporary) file to the specified destination
+        if (move_uploaded_file($file, $destination)) {
+            // $sql = "INSERT INTO files (name, size, downloads) VALUES ('$filename', $size, 0)";
+            $query = "INSERT INTO crudtable(name,email,contact,files) VALUES ('$name','$email','$contact','$filename')";
+            $result = mysqli_query($conn,$query);
+            if (mysqli_query($conn, $result)) {
+                echo "File uploaded successfully";
+            }
+        } else {
+            echo "Failed to upload file.";
+        }
+    }
+}
                 // if($result==true){
                 //     echo "Data Inserted Successfully";
 
@@ -13,8 +43,38 @@
                 // else{
                 //     echo "Something went wrong";
                 // }
-            }
             
+            
+// Downloads files
+if (isset($_GET['file_id'])) {
+    $id = $_GET['file_id'];
+
+    // fetch file to download from database
+    $sql = "SELECT * FROM crudtable WHERE id=$id";
+    $result = mysqli_query($conn, $sql);
+
+    $file = mysqli_fetch_assoc($result);
+    $filepath = 'uploads/' . $file['files'];
+    // print_r($filepath);die;
+
+    if (file_exists($filepath)) {
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename=' . basename($filepath));
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize('uploads/' . $file['files']));
+        readfile('uploads/' . $file['files']);
+
+        // // Now update downloads count
+        // $newCount = $file['downloads'] + 1;
+        // $updateQuery = "UPDATE files SET downloads=$newCount WHERE id=$id";
+        // mysqli_query($conn, $updateQuery);
+        exit;
+    }
+
+}
             
             ?>
 <!DOCTYPE html>
@@ -33,7 +93,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-6 m-auto">
-                    <form action="" method="post">
+                    <form action="" method="post"  enctype = "multipart/form-data">
                     <div class="card m-4">
                         <div class="card-header">
                             <h1 class="text-center">Insert Data</h1>
@@ -53,14 +113,13 @@
                 <label for="contact">Contact</label>
                 <input type="text" class="form-control" id="contact" name="contact" placeholder="Enter your Contact">
             </div>  
-            <button type="submit" class="btn btn-success">
-                Submit
-            </button>
+            <input type="file" name="myfile"><br>
+            <button type="submit" class="btn btn-success" name="save">Upload</button>
+           
             
         </div>
     </form>
     
-<h5 class="text-center"><a href="view.php"><input type="button" class="btn btn-primary" value="View Data"></a></h5>
 </div>
 </div>
 </div>
